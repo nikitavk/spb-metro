@@ -1,13 +1,5 @@
-// import 'pixi'
-// import 'p2'
-// import Phaser from 'phaser'
-
 const stations = require('../assets/metro-spb.json');
 const TWEEN = require('tween.js');
-
-console.log(TWEEN);
-
-console.log(stations);
 
 var c = document.getElementById("myCanvas");
 var ctx = c.getContext("2d");
@@ -33,7 +25,7 @@ function latLngToXY(c) {
   let mercN = Math.log(Math.tan((Math.PI / 4) + (latRad / 2)));
   let y = (mapHeight / 2) - (mapWidth * mercN / (2 * Math.PI));
 
-  return [(x -467.15)*500,(y - 232)*500];
+  return [(x - 467.15) * 1200 + 100, (y - 232) * 1200];
 }
 
 function getLineColor(lineNumber) {
@@ -56,46 +48,50 @@ function getLineColor(lineNumber) {
   }
 }
 
+const scale = 0.5;
+
 function drawLine(line) {
   ctx.beginPath();
-  ctx.lineWidth = "5";
+  ctx.lineWidth = "10";
   ctx.strokeStyle = getLineColor(line[0].line);
 
-  let c = latLngToXY(line[0].realCoordinates);
-  ctx.moveTo(line[0].coordinates[0] / 4, line[0].coordinates[1] / 4);
+  ctx.moveTo(line[0].tweenCoordinates[0] * scale, line[0].tweenCoordinates[1] * scale);
 
   for (let station of line) {
-    c = latLngToXY(station.realCoordinates);
-    console.log(c);
-    ctx.lineTo(station.coordinates[0] / 4, station.coordinates[1] / 4);
+    ctx.lineTo(station.tweenCoordinates[0] * scale, station.tweenCoordinates[1] * scale);
   }
 
-  ctx.stroke(); // Draw it
-}
-
-function drawRealLine(line) {
-  ctx.beginPath();
-  ctx.lineWidth = "5";
-  ctx.strokeStyle = getLineColor(line[0].line);
-
-  let c = latLngToXY(line[0].realCoordinates);
-  ctx.moveTo(c[0], c[1]);
-  // ctx.moveTo(line[0].coordinates[0] / 4, line[0].coordinates[1] / 4);
-
-  for (let station of line) {
-    c = latLngToXY(station.realCoordinates);
-    console.log(c);
-    ctx.lineTo(c[0], c[1]);
-    // ctx.lineTo(station.coordinates[0] / 4, station.coordinates[1] / 4);
-  }
-
-  ctx.stroke(); // Draw it
+  ctx.stroke();
 }
 
 for (let line of lines) {
-  //drawLine(line);
+  for (let s of line) {
+    var coords = { x: s.coordinates[0], y: s.coordinates[1] };
+    let rc = latLngToXY(s.realCoordinates);
+    var tween = new TWEEN.Tween(coords)
+      .to({ x: rc[0], y: rc[1] }, 5000)
+      .onUpdate(function () {
+        s.tweenCoordinates = [this.x, this.y];
+      })
+      .start()
+      .repeat(Infinity)
+      .yoyo(true);
+  }
 }
 
-for (let line of lines) {
-  drawRealLine(line);
+function drawLines() {
+  ctx.clearRect(0, 0, c.width, c.height);
+
+  for (let line of lines) {
+    drawLine(line);
+  }
+
+}
+
+requestAnimationFrame(animate);
+
+function animate(time) {
+  requestAnimationFrame(animate);
+  TWEEN.update(time);
+  drawLines();
 }
