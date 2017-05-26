@@ -69,7 +69,7 @@ for (let line of lines) {
     for (let s of line) {
         let coords = { x: s.coordinates[0], y: s.coordinates[1] };
 
-        var rc = latLngToXY(s.realCoordinates);
+        var rc = latLngToXY(s.realCoordinates); 
         let tween = new TWEEN.Tween(coords)
             .to({ x: rc[0], y: rc[1] }, 5000)
             .onUpdate(function () {
